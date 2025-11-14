@@ -790,6 +790,45 @@ function add_product_ad($xml, $product, $is_active) {
         $ad->addChild('InteriorSubType', htmlspecialchars($interior_subtype));
     }
 
+    // Promo и PromoManualOptions с приоритетом: товар -> категория
+    $promo = get_post_meta($product->get_id(), 'avito_promo', true);
+    if (empty($promo) && $category_id) {
+        $promo = get_term_meta($category_id, 'avito_promo', true);
+    }
+    if (!empty($promo)) {
+        $ad->addChild('Promo', htmlspecialchars($promo));
+    }
+
+    $region = get_post_meta($product->get_id(), 'avito_region', true);
+    if (empty($region) && $category_id) {
+        $region = get_term_meta($category_id, 'avito_region', true);
+    }
+
+    $bid = get_post_meta($product->get_id(), 'avito_bid', true);
+    if (empty($bid) && $category_id) {
+        $bid = get_term_meta($category_id, 'avito_bid', true);
+    }
+
+    $daily_limit = get_post_meta($product->get_id(), 'avito_dailylimit', true);
+    if (empty($daily_limit) && $category_id) {
+        $daily_limit = get_term_meta($category_id, 'avito_dailylimit', true);
+    }
+
+    if (!empty($region) || !empty($bid) || !empty($daily_limit)) {
+        $promo_manual_options = $ad->addChild('PromoManualOptions');
+        $item = $promo_manual_options->addChild('Item');
+
+        if (!empty($region)) {
+            $item->addChild('Region', htmlspecialchars($region));
+        }
+        if (!empty($bid)) {
+            $item->addChild('Bid', htmlspecialchars($bid));
+        }
+        if (!empty($daily_limit)) {
+            $item->addChild('DailyLimit', htmlspecialchars($daily_limit));
+        }
+    }
+
     // Устанавливаем цену объявления
     $ad->addChild('Price', $price);
 }

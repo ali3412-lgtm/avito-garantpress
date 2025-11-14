@@ -604,6 +604,34 @@ function add_avito_required_fields() {
         'desc_tip' => true
     ));
 
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_promo',
+        'label' => 'Promo',
+        'description' => 'Значение поля <Promo> (например: PremiumListing)',
+        'desc_tip' => true
+    ));
+
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_region',
+        'label' => 'Promo Region',
+        'description' => 'Регион для PromoManualOptions',
+        'desc_tip' => true
+    ));
+
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_bid',
+        'label' => 'Promo Bid',
+        'description' => 'Ставка для PromoManualOptions',
+        'desc_tip' => true
+    ));
+
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_dailylimit',
+        'label' => 'Promo Daily Limit',
+        'description' => 'Дневной лимит для PromoManualOptions',
+        'desc_tip' => true
+    ));
+
     echo '</div>';
 }
 
@@ -628,4 +656,16 @@ function save_avito_required_fields($post_id) {
 
     $interior_subtype = isset($_POST['avito_interior_subtype']) ? sanitize_text_field($_POST['avito_interior_subtype']) : '';
     update_post_meta($post_id, 'avito_interior_subtype', $interior_subtype);
+
+    $promo = isset($_POST['avito_promo']) ? sanitize_text_field($_POST['avito_promo']) : '';
+    update_post_meta($post_id, 'avito_promo', $promo);
+
+    $region = isset($_POST['avito_region']) ? sanitize_text_field($_POST['avito_region']) : '';
+    update_post_meta($post_id, 'avito_region', $region);
+
+    $bid = isset($_POST['avito_bid']) ? sanitize_text_field($_POST['avito_bid']) : '';
+    update_post_meta($post_id, 'avito_bid', $bid);
+
+    $daily_limit = isset($_POST['avito_dailylimit']) ? sanitize_text_field($_POST['avito_dailylimit']) : '';
+    update_post_meta($post_id, 'avito_dailylimit', $daily_limit);
 }

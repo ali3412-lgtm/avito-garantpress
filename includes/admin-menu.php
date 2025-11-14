@@ -512,7 +512,27 @@ function wc_avito_export_debug_info() {
         if (!empty($avito_interior_subtype)) {
             $meta_fields['avito_interior_subtype'] = $avito_interior_subtype;
         }
-        
+
+        $avito_promo = get_post_meta($product->get_id(), 'avito_promo', true);
+        if (!empty($avito_promo)) {
+            $meta_fields['avito_promo'] = $avito_promo;
+        }
+
+        $avito_region = get_post_meta($product->get_id(), 'avito_region', true);
+        if (!empty($avito_region)) {
+            $meta_fields['avito_region'] = $avito_region;
+        }
+
+        $avito_bid = get_post_meta($product->get_id(), 'avito_bid', true);
+        if (!empty($avito_bid)) {
+            $meta_fields['avito_bid'] = $avito_bid;
+        }
+
+        $avito_dailylimit = get_post_meta($product->get_id(), 'avito_dailylimit', true);
+        if (!empty($avito_dailylimit)) {
+            $meta_fields['avito_dailylimit'] = $avito_dailylimit;
+        }
+
         if (!empty($meta_fields)) {
             $product_data['meta_fields'] = $meta_fields;
         }
@@ -708,6 +728,30 @@ function wc_avito_export_debug_info() {
                 'label' => 'InteriorSubType',
                 'required' => true,
                 'description' => 'Обязательное поле Avito: подтип интерьера'
+            ),
+            'avito_promo' => array(
+                'type' => 'text',
+                'label' => 'Promo',
+                'required' => false,
+                'description' => 'Значение поля <Promo> в XML (тип платного продвижения)'
+            ),
+            'avito_region' => array(
+                'type' => 'text',
+                'label' => 'Promo Region',
+                'required' => false,
+                'description' => 'Регион для PromoManualOptions'
+            ),
+            'avito_bid' => array(
+                'type' => 'text',
+                'label' => 'Promo Bid',
+                'required' => false,
+                'description' => 'Ставка для PromoManualOptions'
+            ),
+            'avito_dailylimit' => array(
+                'type' => 'text',
+                'label' => 'Promo Daily Limit',
+                'required' => false,
+                'description' => 'Дневной лимит для PromoManualOptions'
             )
         ),
         'category_meta_fields' => array(
