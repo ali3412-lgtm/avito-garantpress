@@ -476,6 +476,41 @@ function set_common_ad_settings($ad, $product = null, $is_active = true, $catego
             }
         }
     }
+
+    // Добавляем изображения из ACF галереи "портфолио"
+    if ($added < $max_images && function_exists('get_field')) {
+        $portfolio_images = get_field('портфолио', $product->get_id());
+        if ($portfolio_images && is_array($portfolio_images)) {
+            foreach ($portfolio_images as $image) {
+                if ($added >= $max_images) {
+                    break;
+                }
+
+                // Сначала пытаемся использовать ID вложения
+                if (is_array($image) && !empty($image['ID']) && !isset($used_ids[$image['ID']])) {
+                    add_image_to_ad($images, $image['ID']);
+                    $used_ids[$image['ID']] = true;
+                    $added++;
+                    continue;
+                }
+
+                // Если ID нет, но есть URL, добавляем напрямую
+                $url = '';
+                if (is_array($image) && !empty($image['url'])) {
+                    $url = $image['url'];
+                } elseif (is_string($image)) {
+                    $url = $image;
+                }
+
+                if (!empty($url) && !isset($used_urls[$url])) {
+                    $image_node = $images->addChild('Image');
+                    $image_node->addAttribute('url', esc_url($url));
+                    $used_urls[$url] = true;
+                    $added++;
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -863,6 +898,7 @@ function add_product_images($ad, $product) {
     $max_images = 10;
     $added = 0;
     $used_ids = array();
+    $used_urls = array();
 
     // Добавляем основное изображение товара первым
     $main_image_id = $product->get_image_id();
@@ -872,7 +908,7 @@ function add_product_images($ad, $product) {
         $added++;
     }
 
-    // Добавляем изображения из галереи, пока не достигнем лимита
+    // Добавляем изображения из галереи WooCommerce, пока не достигнем лимита
     $gallery_image_ids = $product->get_gallery_image_ids();
     if (!empty($gallery_image_ids)) {
         foreach ($gallery_image_ids as $image_id) {
