@@ -459,29 +459,6 @@ function save_available_from_field($post_id) {
     update_post_meta($post_id, 'available_from', $available_from);
 }
 
-/**
- * Добавляем метаполе "deposit" для товаров
- */
-add_action('woocommerce_product_options_pricing', 'add_deposit_field');
-add_action('woocommerce_process_product_meta', 'save_deposit_field');
-
-function add_deposit_field() {
-    woocommerce_wp_text_input(array(
-        'id' => 'deposit',
-        'label' => 'Залог (руб.)',
-        'description' => 'Укажите сумму залога для товара. Если оставить пустым, будет использовано значение по умолчанию.',
-        'type' => 'number',
-        'custom_attributes' => array(
-            'step' => 'any',
-            'min' => '0'
-        )
-    ));
-}
-
-function save_deposit_field($post_id) {
-    $deposit = isset($_POST['deposit']) ? wc_format_decimal($_POST['deposit']) : '';
-    update_post_meta($post_id, 'deposit', $deposit);
-}
 
 /**
  * Добавляем метаполе "avito_type" для товаров
@@ -547,4 +524,28 @@ function add_avito_specialty_field() {
 function save_avito_specialty_field($post_id) {
     $avito_specialty = isset($_POST['avito_specialty']) ? sanitize_text_field($_POST['avito_specialty']) : '';
     update_post_meta($post_id, 'avito_specialty', $avito_specialty);
+}
+
+/**
+ * Добавляем метаполе "avito_price" для товаров
+ */
+add_action('woocommerce_product_options_pricing', 'add_avito_price_field');
+add_action('woocommerce_process_product_meta', 'save_avito_price_field');
+
+function add_avito_price_field() {
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_price',
+        'label' => 'Цена для Avito (руб.)',
+        'description' => 'Укажите цену для Avito. Если оставить пустым, будет использована стандартная цена товара.',
+        'type' => 'number',
+        'custom_attributes' => array(
+            'step' => 'any',
+            'min' => '0'
+        )
+    ));
+}
+
+function save_avito_price_field($post_id) {
+    $avito_price = isset($_POST['avito_price']) ? wc_format_decimal($_POST['avito_price']) : '';
+    update_post_meta($post_id, 'avito_price', $avito_price);
 }

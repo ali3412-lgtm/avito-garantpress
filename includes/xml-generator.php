@@ -10,28 +10,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/**
- * Новая функция для получения цены за сутки
- */
-function get_daily_price($product) {
-    $price = 0;
-    
-    // Для вариативных товаров получаем минимальную цену вариации
-    if ($product->is_type('variable')) {
-        $price = $product->get_variation_price('min', true);
-    } else {
-        $price = $product->get_price();
-    }
-    
-    // Конвертируем в число и проверяем на валидность
-    $price = floatval($price);
-    
-    if ($price <= 0) {
-        return 100; // Цена по умолчанию, если не удалось получить
-    }
-    
-    return $price * 2; // Цена за сутки в 2 раза выше цены за 3 часа
-}
 
 /**
  * Основная функция генерации XML для Avito
@@ -539,8 +517,6 @@ function add_custom_ad($xml, $type) {
     $ad->addChild('Id', $type == 'Строительные инструменты' ? 'custom_ad' : 'custom_ad_garden');
     $ad->addChild('Title', $type . ': аренда (прокат)');
 
-    $deposit = $cheapest_product ? calculate_deposit($cheapest_product) : 2000;
-
     $description_prefix = '<p>Предлагаем прокат широкого ассортимента качественных инструментов для бытовых и профессиональных задач. У нас вы найдете все необходимое для ' . ($type == 'Строительные инструменты' ? 'ремонта и строительства' : 'садоводства и ландшафтных работ') . ' по доступным ценам и на гибких условиях аренды. Экономьте на покупке, арендуя надежное оборудование с быстрой доставкой и консультацией наших специалистов. Решайте любые задачи с нашими инструментами – удобно, выгодно и эффективно!</p>';
 
     $full_description = $description_prefix . get_common_description() . '<p>Нужен ' . ($type == 'Строительные инструменты' ? 'строительный' : 'садовый') . ' инструмент? Обращайтесь, постараемся подобрать!</p>';
@@ -611,12 +587,6 @@ function add_category_ad($xml, $category, $is_active) {
         }
     }
     $ad->addChild('Price', $price);
-
-    // Для расчета залога всегда пытаемся получить самый дешевый товар, если он еще не получен
-    if (!$cheapest_product) {
-        $cheapest_product = get_cheapest_product_in_category($category->term_id);
-    }
-    $deposit = $cheapest_product ? calculate_deposit($cheapest_product) : 2000;
 
     add_category_product_images($ad, $category->term_id);
 
@@ -743,37 +713,24 @@ function add_product_ad($xml, $product, $is_active) {
     
     set_common_ad_settings($ad, $product, $is_active, $effective_category_id);
 
-    // Получаем значение поля 'short_avalible'
-    $short_avalible = get_post_meta($product->get_id(), 'short_avalible', true);
-
-    // Проверяем, доступна ли аренда на 3 часа
-    $has_no_3h_rental = ($short_avalible === 'нет');
-
-    // Всегда получаем цены, считая что цена продукта - это цена за 3 часа
-    // Для вариативных товаров получаем минимальную цену
-    if ($product->is_type('variable')) {
-        $price_3hours = floatval($product->get_variation_price('min', true));
+    // Получаем цену товара - сначала проверяем произвольное поле avito_price
+    $avito_price = get_post_meta($product->get_id(), 'avito_price', true);
+    
+    if (!empty($avito_price) && is_numeric($avito_price)) {
+        $price = floatval($avito_price);
     } else {
-        $price_3hours = floatval($product->get_price());
+        // Если поле avito_price пустое, используем стандартную цену WooCommerce
+        // Для вариативных товаров получаем минимальную цену
+        if ($product->is_type('variable')) {
+            $price = floatval($product->get_variation_price('min', true));
+        } else {
+            $price = floatval($product->get_price());
+        }
     }
     
     // Если цена не установлена, используем значение по умолчанию
-    if ($price_3hours <= 0) {
-        $price_3hours = 50;
-    }
-    
-    $daily_price = get_daily_price($product);
-    $price_7days = round($daily_price * 0.8, 2);
-    $price_30days = round($daily_price * 0.6, 2);
-
-    // Рассчитываем залог
-    $deposit = calculate_deposit($product);
-
-    // Формируем информацию о ценах
-    if ($has_no_3h_rental) {
-        $price_info = "<p><strong>Цены:</strong></p><p>от 1 дня: {$daily_price} р/сут. <br />от 7 дней: {$price_7days} р/сут. <br />от 30 дней: {$price_30days} р/сут.</p>";
-    } else {
-        $price_info = "<p><strong>Цены:</strong><br />3 часа: {$price_3hours} р. <br />от 1 дня: {$daily_price} р/сут. <br />от 7 дней: {$price_7days} р/сут. <br />от 30 дней: {$price_30days} р/сут.</p>";
+    if ($price <= 0) {
+        $price = 50;
     }
 
     add_product_images($ad, $product);
@@ -807,48 +764,16 @@ function add_product_ad($xml, $product, $is_active) {
 
     add_description_to_ad($ad, $description);
 
-    // Устанавливаем цену объявления
-    if ($has_no_3h_rental) {
-        $ad->addChild('Price', $daily_price);
-    } else {
-        $ad->addChild('Price', $price_3hours);
-    }
+    // Устанавливаем цену объявления из WooCommerce
+    $ad->addChild('Price', $price);
 }
 
-/**
- * Форматирует атрибуты товара в HTML
- */
-function get_product_attributes($product) {
-    $attributes = $product->get_attributes();
-    $output = '';
-
-    if (!empty($attributes)) {
-        $output .= "<p><strong>Характеристики:</strong><br />";
-        foreach ($attributes as $attribute) {
-            if ($attribute->get_visible()) {
-                $name = wc_attribute_label($attribute->get_name());
-                $value = $attribute->get_options();
-                if (!empty($value)) {
-                    $value = is_array($value) ? implode(', ', $value) : $value;
-                    $output .= "{$name}: {$value}.<br />";
-                }
-            }
-        }
-        $output .= "</p>";
-    }
-
-    return $output;
-}
 
 /**
  * Формирует общее описание
  */
-function get_common_description($deposit = null) {
+function get_common_description() {
     $description = '<p><strong>Адрес получения:</strong> г. Ижевск, ул. Фурманова, 57.<br /><strong>Доставка возможна</strong>, обсуждается индивидуально.<br /><strong>Режим работы</strong>&nbsp;&ndash;&nbsp;пн-пт: с 9.00 до 19.00, сб-вс: с 9.00&nbsp;до 17.00</p>';
-
-    if ($deposit !== null) {
-        $description .= '<p>Сумма залога – ' . $deposit . ' р.</p>';
-    }
 
     $description .= '<p>Получение по одному из документов: паспорт, водительское удостоверение или военный билет.</p>';
 
@@ -888,19 +813,6 @@ function add_image_to_ad($images, $image_id) {
     }
 }
 
-/**
- * Рассчитывает сумму залога (8 дневных цен)
- */
-function calculate_deposit($product) {
-    $custom_deposit = get_post_meta($product->get_id(), 'deposit', true);
-    if (!empty($custom_deposit)) {
-        return floatval($custom_deposit);
-    }
-
-    // Используем цену за сутки для расчета залога
-    $daily_price = get_daily_price($product);
-    return round($daily_price * 8, 2);
-}
 
 /**
  * Считает количество товаров в категории

@@ -483,9 +483,9 @@ function wc_avito_export_debug_info() {
             $meta_fields['short_avalible'] = $short_avalible;
         }
         
-        $deposit_amount = get_post_meta($product->get_id(), 'deposit_amount', true);
-        if (!empty($deposit_amount)) {
-            $meta_fields['deposit_amount'] = $deposit_amount;
+        $avito_price = get_post_meta($product->get_id(), 'avito_price', true);
+        if (!empty($avito_price)) {
+            $meta_fields['avito_price'] = $avito_price;
         }
         
         if (!empty($meta_fields)) {
@@ -646,11 +646,11 @@ function wc_avito_export_debug_info() {
                 'default' => 'да',
                 'description' => 'Доступна ли аренда на 3 часа. Влияет на отображение цен в объявлении'
             ),
-            'deposit_amount' => array(
+            'avito_price' => array(
                 'type' => 'number',
-                'label' => 'Размер залога',
+                'label' => 'Цена для Avito',
                 'required' => false,
-                'description' => 'Сумма залога в рублях. Если не указана, рассчитывается как цена товара × 10'
+                'description' => 'Переопределяет стандартную цену товара в WooCommerce. Если не указана, используется цена из WooCommerce'
             )
         ),
         'category_meta_fields' => array(
@@ -759,31 +759,6 @@ function wc_avito_export_debug_info() {
                 'label' => 'AvitoId категории',
                 'required' => false,
                 'description' => 'Используется как Id в XML для категорийных объявлений'
-            )
-        ),
-        'price_calculation_logic' => array(
-            'price_3hours' => array(
-                'source' => 'product.get_price() или get_variation_price("min") для вариативных',
-                'description' => 'Базовая цена за 3 часа аренды',
-                'default_if_empty' => 50
-            ),
-            'daily_price' => array(
-                'formula' => 'price_3hours × 2',
-                'description' => 'Цена за сутки',
-                'default_if_empty' => 100
-            ),
-            'price_7days' => array(
-                'formula' => 'daily_price × 0.8',
-                'description' => 'Цена за сутки при аренде от 7 дней (скидка 20%)'
-            ),
-            'price_30days' => array(
-                'formula' => 'daily_price × 0.6',
-                'description' => 'Цена за сутки при аренде от 30 дней (скидка 40%)'
-            ),
-            'deposit' => array(
-                'source' => 'deposit_amount meta-field или price × 10',
-                'description' => 'Размер залога',
-                'default' => 2000
             )
         ),
         'fallback_logic' => array(
