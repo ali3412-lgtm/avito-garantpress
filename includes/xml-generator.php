@@ -480,6 +480,9 @@ function set_common_ad_settings($ad, $product = null, $is_active = true, $catego
     // Добавляем изображения из ACF галереи "портфолио"
     if ($added < $max_images && function_exists('get_field')) {
         $portfolio_images = get_field('портфолио', $product->get_id());
+        if (empty($portfolio_images)) {
+            $portfolio_images = get_field('portfolio', $product->get_id());
+        }
         if ($portfolio_images && is_array($portfolio_images)) {
             foreach ($portfolio_images as $image) {
                 if ($added >= $max_images) {
