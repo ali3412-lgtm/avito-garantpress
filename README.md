@@ -39,12 +39,12 @@ WordPress плагин для автоматической генерации XM
 
 ```bash
 cd /path/to/wordpress/wp-content/plugins/
-git clone https://github.com/ali3412-lgtm/wc-avito.git garantpress-avito
+git clone https://github.com/ali3412-lgtm/avito-garantpress.git garantpress-avito
 ```
 
 #### Способ 2: Загрузка ZIP через WordPress
 
-1. Скачайте [последнюю версию](https://github.com/ali3412-lgtm/wc-avito/archive/refs/heads/main.zip)
+1. Скачайте [последнюю версию](https://github.com/ali3412-lgtm/avito-garantpress/archive/refs/heads/main.zip)
 2. В WordPress: **Плагины → Добавить новый → Загрузить плагин**
 3. Выберите скачанный ZIP файл
 
@@ -253,7 +253,7 @@ GPL v2 или выше
 
 **GarantPress**
 
-🌐 https://press18.ru
+🌐 https://onetrickweb.com/
 
 ## 🤝 Содействие
 
