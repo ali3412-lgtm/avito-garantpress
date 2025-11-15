@@ -559,6 +559,14 @@ add_action('woocommerce_process_product_meta', 'save_avito_required_fields');
 function add_avito_required_fields() {
     echo '<div class="options_group">';
 
+    woocommerce_wp_text_input(array(
+        'id' => 'avito_category',
+        'label' => 'Категория Avito (Category)',
+        'description' => 'Например: Предложение услуг, Товары, Бытовые услуги',
+        'desc_tip' => true,
+        'placeholder' => 'Оставьте пустым для использования категории товара'
+    ));
+
     woocommerce_wp_select(array(
         'id' => 'avito_ad_type',
         'label' => 'Тип объявления (AdType)',
@@ -636,6 +644,9 @@ function add_avito_required_fields() {
 }
 
 function save_avito_required_fields($post_id) {
+    $avito_category = isset($_POST['avito_category']) ? sanitize_text_field($_POST['avito_category']) : '';
+    update_post_meta($post_id, 'avito_category', $avito_category);
+
     $ad_type = isset($_POST['avito_ad_type']) ? sanitize_text_field($_POST['avito_ad_type']) : '';
     if (!in_array($ad_type, array('Товар произведён мной', 'Товар куплен на продажу'), true)) {
         $ad_type = '';

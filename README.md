@@ -94,6 +94,7 @@ git clone https://github.com/ali3412-lgtm/avito-garantpress.git avito-garantpres
 | Поле | Описание |
 |------|----------|
 | `avito_export` | ✅ Экспортировать на Avito (yes/no) |
+| `avito_category` | Категория Avito (переопределяет категорию товара) |
 | `avito_price` | Цена для Avito (в рублях) |
 | `avito_ad_type` | Тип объявления (Товар произведён мной / куплен на продажу) |
 | `avito_condition` | Состояние (Новое / Б/у) |
@@ -133,6 +134,11 @@ git clone https://github.com/ali3412-lgtm/avito-garantpress.git avito-garantpres
 1. Произвольное поле `avito_price` товара
 2. Стандартная цена WooCommerce
 3. Дефолтное значение: 50₽
+
+**Приоритет для категории Avito (Category):**
+1. Произвольное поле `avito_category` товара
+2. Произвольное поле `avito_category` категории WooCommerce
+3. Дефолтное значение: "Предложение услуг"
 
 **Обязательные поля Avito для товаров:** `AdType`, `Condition`, `GoodsType`, `GoodsSubType`, `InteriorSubType`.
 

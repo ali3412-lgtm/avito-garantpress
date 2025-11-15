@@ -191,8 +191,10 @@ function validate_avito_xml($xml_string) {
  * Устанавливает общие настройки объявления
  */
 function set_common_ad_settings($ad, $product = null, $is_active = true, $category_id = null) {
-    // Категория Avito - используем категорийная настройка или по умолчанию
+    // Категория Avito с приоритетом: товар → категория → дефолт
     $avito_category = 'Предложение услуг'; // По умолчанию
+    
+    // Приоритет 2: Категория WooCommerce
     if ($category_id) {
         $category_avito_category = get_term_meta($category_id, 'avito_category', true);
         if (!empty($category_avito_category)) {
@@ -200,8 +202,13 @@ function set_common_ad_settings($ad, $product = null, $is_active = true, $catego
         }
     }
     
-    // Отладочная информация для проверки значения
-    error_log('Category ID: ' . $category_id . ', Category value: ' . $avito_category);
+    // Приоритет 1: Товар (самый высокий)
+    if ($product) {
+        $product_avito_category = get_post_meta($product->get_id(), 'avito_category', true);
+        if (!empty($product_avito_category)) {
+            $avito_category = $product_avito_category;
+        }
+    }
     
     $ad->addChild('Category', htmlspecialchars($avito_category));
     
