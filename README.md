@@ -39,7 +39,7 @@ WordPress плагин для автоматической генерации XM
 
 ```bash
 cd /path/to/wordpress/wp-content/plugins/
-git clone https://github.com/ali3412-lgtm/avito-garantpress.git garantpress-avito
+git clone https://github.com/ali3412-lgtm/avito-garantpress.git avito-garantpress
 ```
 
 #### Способ 2: Загрузка ZIP через WordPress
@@ -51,7 +51,7 @@ git clone https://github.com/ali3412-lgtm/avito-garantpress.git garantpress-avit
 #### Способ 3: Ручная установка
 
 1. Скачайте репозиторий
-2. Скопируйте содержимое в `/wp-content/plugins/garantpress-avito/`
+2. Скопируйте содержимое в `/wp-content/plugins/avito-garantpress/`
 
 ---
 
@@ -195,8 +195,8 @@ https://ваш-сайт.ru/wp-content/uploads/avito_products.xml
 ### Структура плагина
 
 ```
-garantpress-avito/              # 📦 Корень плагина (готов к установке)
-├── garantpress-avito.php       # Главный файл плагина
+avito-garantpress/              # 📦 Корень плагина (готов к установке)
+├── avito-garantpress.php       # Главный файл плагина
 ├── includes/                   # Модули плагина
 │   ├── admin-menu.php          # Административная панель
 │   ├── product-fields.php      # Кастомные поля товаров/категорий
