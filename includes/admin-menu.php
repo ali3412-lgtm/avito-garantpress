@@ -31,7 +31,7 @@ function wc_avito_xml_menu() {
  * Страница генерации XML
  */
 function wc_avito_xml_page() {
-    if (isset($_POST['save_settings'])) {
+    if (isset($_POST['save_settings']) && check_admin_referer('save_avito_settings', 'wc_avito_settings_nonce')) {
         // Сохранение существующих настроек
         update_option('wc_avito_xml_enable_categories', isset($_POST['wc_avito_xml_enable_categories']) ? '1' : '0');
         update_option('wc_avito_xml_enable_products', isset($_POST['wc_avito_xml_enable_products']) ? '1' : '0');
@@ -80,6 +80,7 @@ function wc_avito_xml_page() {
     <div class="wrap">
         <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
         <form method="post" action="">
+            <?php wp_nonce_field('save_avito_settings', 'wc_avito_settings_nonce'); ?>
             <h2>Настройки экспорта</h2>
             <table class="form-table">
                 <tr valign="top">
@@ -267,42 +268,12 @@ function wc_avito_xml_page() {
         // Логи cron-задач
         if (get_option('wc_avito_xml_enable_logging', '1') === '1') {
             echo '<h2>Логи выполнения</h2>';
-            $logs = get_option('wc_avito_xml_cron_logs', array());
             
-            if (!empty($logs)) {
-                // Показываем последние 20 записей
-                $recent_logs = array_slice(array_reverse($logs), 0, 20);
-                
-                echo '<div style="background: #f1f1f1; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">';
-                foreach ($recent_logs as $log) {
-                    $level_color = '';
-                    switch ($log['level']) {
-                        case 'error':
-                            $level_color = 'color: red;';
-                            break;
-                        case 'warning':
-                            $level_color = 'color: orange;';
-                            break;
-                        case 'info':
-                            $level_color = 'color: blue;';
-                            break;
-                    }
-                    echo '<div style="margin-bottom: 5px;">';
-                    echo '<span style="color: #666;">[' . esc_html($log['timestamp']) . ']</span> ';
-                    echo '<span style="' . $level_color . '">[' . strtoupper(esc_html($log['level'])) . ']</span> ';
-                    echo esc_html($log['message']);
-                    echo '</div>';
-                }
-                echo '</div>';
-                
-                // Кнопка очистки логов
-                echo '<form method="post" action="" style="margin-top: 10px;">';
-                wp_nonce_field('clear_avito_logs', 'wc_avito_logs_nonce');
-                submit_button('Очистить логи', 'delete', 'clear_logs', false);
-                echo '</form>';
-            } else {
-                echo '<p>Логи пусты.</p>';
-            }
+            // Ссылка на логи WooCommerce
+            $log_url = admin_url('admin.php?page=wc-status&tab=logs');
+            echo '<p>Логи теперь сохраняются в системный журнал WooCommerce.</p>';
+            echo '<p><a href="' . esc_url($log_url) . '" class="button" target="_blank">Открыть журнал логов</a></p>';
+            echo '<p class="description">Ищите файл с префиксом <code>avito-xml-export-...</code></p>';
         }
         ?>
     </div>
@@ -627,8 +598,9 @@ function wc_avito_export_debug_info() {
     $debug_data['cron_info']['last_xml_run'] = get_option('wc_avito_xml_last_cron_run', 'Никогда');
     
     // 6. Логи (последние 50)
-    $logs = get_option('wc_avito_xml_cron_logs', array());
-    $debug_data['logs'] = array_slice(array_reverse($logs), 0, 50);
+    // При использовании WC_Logger логи находятся в файлах, мы не можем просто так их получить здесь
+    // Оставляем пустым или указываем путь
+    $debug_data['logs'] = 'See WooCommerce Logs (avito-xml-export)';
     
     // 7. Глобальные ошибки
     global $avito_xml_errors;

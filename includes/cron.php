@@ -143,27 +143,28 @@ function wc_avito_xml_log($message, $level = 'info') {
         return;
     }
     
-    $timestamp = current_time('Y-m-d H:i:s');
-    $log_message = "[{$timestamp}] [{$level}] WC Avito: {$message}";
-    
-    // Записываем в error_log
-    error_log($log_message);
-    
-    // Дополнительно сохраняем в базу данных для отображения в админке
-    $logs = get_option('wc_avito_xml_cron_logs', array());
-    
-    // Ограничиваем количество записей в логе (последние 100)
-    if (count($logs) >= 100) {
-        $logs = array_slice($logs, -99);
+    if (function_exists('wc_get_logger')) {
+        $logger = wc_get_logger();
+        $context = array('source' => 'avito-xml-export');
+
+        // Маппинг уровней
+        switch ($level) {
+            case 'error':
+                $logger->error($message, $context);
+                break;
+            case 'warning':
+                $logger->warning($message, $context);
+                break;
+            case 'info':
+            default:
+                $logger->info($message, $context);
+                break;
+        }
+    } else {
+        // Fallback если WC логгер недоступен
+        $timestamp = current_time('Y-m-d H:i:s');
+        error_log("[{$timestamp}] [{$level}] WC Avito: {$message}");
     }
-    
-    $logs[] = array(
-        'timestamp' => $timestamp,
-        'level' => $level,
-        'message' => $message
-    );
-    
-    update_option('wc_avito_xml_cron_logs', $logs);
 }
 
 /**
@@ -205,6 +206,7 @@ function wc_avito_xml_get_next_cron_info() {
  * Очистка логов cron-задач
  */
 function wc_avito_xml_clear_cron_logs() {
-    delete_option('wc_avito_xml_cron_logs');
-    wc_avito_xml_log('Cron logs cleared by administrator');
+    // Очистка логов теперь происходит через интерфейс WooCommerce
+    // Но мы можем записать сообщение о запросе очистки
+    wc_avito_xml_log('Log clearing requested (logs are now managed by WooCommerce)');
 }
