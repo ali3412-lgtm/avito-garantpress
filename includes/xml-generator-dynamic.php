@@ -105,9 +105,9 @@ function wc_avito_add_dynamic_fields($ad, $product, $category_id) {
         }
     }
     
-    // Добавляем пользовательские поля категории (если есть)
+    // Добавляем пользовательские поля категории (с учётом иерархии родительских категорий)
     if ($category_id) {
-        $custom_fields = get_term_meta($category_id, 'avito_category_custom_fields', true);
+        $custom_fields = wc_avito_get_category_custom_fields_hierarchy($category_id);
         
         if (!empty($custom_fields) && is_array($custom_fields)) {
             foreach ($custom_fields as $field) {
@@ -338,4 +338,46 @@ function wc_avito_is_field_enabled($section, $field_key) {
     }
     
     return false;
+}
+
+/**
+ * Получает пользовательские поля категории с учётом иерархии родительских категорий
+ * Поля подкатегории имеют приоритет над полями родительских категорий
+ *
+ * @param int $category_id ID категории
+ * @return array Массив пользовательских полей
+ */
+function wc_avito_get_category_custom_fields_hierarchy($category_id) {
+    $all_fields = array();
+    $xml_tags_added = array(); // Для отслеживания уже добавленных XML тегов
+    
+    // Рекурсивно собираем поля от текущей категории к корневой
+    $current_category_id = $category_id;
+    
+    while ($current_category_id > 0) {
+        $custom_fields = get_term_meta($current_category_id, 'avito_category_custom_fields', true);
+        
+        if (!empty($custom_fields) && is_array($custom_fields)) {
+            foreach ($custom_fields as $field) {
+                $xml_tag = isset($field['xml_tag']) ? $field['xml_tag'] : '';
+                
+                // Добавляем поле только если такой XML тег ещё не был добавлен
+                // (поля подкатегории имеют приоритет над родительскими)
+                if (!empty($xml_tag) && !in_array($xml_tag, $xml_tags_added)) {
+                    $all_fields[] = $field;
+                    $xml_tags_added[] = $xml_tag;
+                }
+            }
+        }
+        
+        // Получаем родительскую категорию
+        $term = get_term($current_category_id, 'product_cat');
+        if ($term && !is_wp_error($term) && $term->parent > 0) {
+            $current_category_id = $term->parent;
+        } else {
+            break;
+        }
+    }
+    
+    return $all_fields;
 }
