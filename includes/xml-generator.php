@@ -119,6 +119,19 @@ function generate_avito_xml() {
                     }
                 }
                 
+                // Проверяем наличие краткого описания (если настройка включена)
+                if ($should_export) {
+                    $skip_without_excerpt = get_option('wc_avito_skip_products_without_excerpt', '0');
+                    
+                    if ($skip_without_excerpt === '1') {
+                        $short_description = $product->get_short_description();
+                        
+                        if (empty(trim($short_description))) {
+                            $should_export = false;
+                        }
+                    }
+                }
+                
                 // Экспортируем товар
                 if ($should_export) {
                     add_product_ad($xml, $product, true);

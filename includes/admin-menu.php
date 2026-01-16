@@ -40,6 +40,9 @@ function wc_avito_xml_page() {
         
         // Настройка пропуска товаров без изображений
         update_option('wc_avito_skip_products_without_images', isset($_POST['wc_avito_skip_products_without_images']) ? '1' : '0');
+        
+        // Настройка пропуска товаров без краткого описания
+        update_option('wc_avito_skip_products_without_excerpt', isset($_POST['wc_avito_skip_products_without_excerpt']) ? '1' : '0');
 
         // Настройки расписания
         update_option('wc_avito_xml_schedule_enabled', isset($_POST['wc_avito_xml_schedule_enabled']) ? '1' : '0');
@@ -90,6 +93,15 @@ function wc_avito_xml_page() {
                         <input type="checkbox" name="wc_avito_skip_products_without_images" value="1" <?php checked(get_option('wc_avito_skip_products_without_images', '0'), '1'); ?> />
                         <p class="description">
                             Если включено, товары без изображений не будут добавлены в XML-файл для Avito.
+                        </p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Не формировать объявления без краткого описания</th>
+                    <td>
+                        <input type="checkbox" name="wc_avito_skip_products_without_excerpt" value="1" <?php checked(get_option('wc_avito_skip_products_without_excerpt', '0'), '1'); ?> />
+                        <p class="description">
+                            Если включено, товары без краткого описания не будут добавлены в XML-файл для Avito.
                         </p>
                     </td>
                 </tr>
