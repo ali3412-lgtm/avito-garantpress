@@ -109,6 +109,120 @@ function wc_avito_add_dynamic_product_fields() {
         }
     }
     
+    // Получаем пользовательские поля товара
+    $custom_fields = get_post_meta($post->ID, 'avito_product_custom_fields', true);
+    if (!is_array($custom_fields)) {
+        $custom_fields = array();
+    }
+    ?>
+    <hr style="margin: 15px 12px; border-top: 1px solid #ddd;">
+    <h4 style="padding-left: 12px; margin-bottom: 10px;">Пользовательские поля товара</h4>
+    <p style="padding-left: 12px; color: #666; font-size: 12px;">Добавьте индивидуальные XML-поля для этого товара. Эти поля имеют приоритет над полями категории.</p>
+    
+    <div style="padding: 0 12px;">
+        <table class="widefat avito-product-custom-fields" style="max-width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">XML тег</th>
+                    <th style="width: 65%;">Значение</th>
+                    <th style="width: 10%; text-align: center;">Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($custom_fields)) : ?>
+                    <?php foreach ($custom_fields as $index => $field) :
+                        $xml_tag = isset($field['xml_tag']) ? $field['xml_tag'] : '';
+                        $value = isset($field['value']) ? $field['value'] : '';
+                    ?>
+                        <tr>
+                            <td style="padding: 8px;">
+                                <input type="text" name="avito_product_custom_fields[<?php echo esc_attr($index); ?>][xml_tag]" value="<?php echo esc_attr($xml_tag); ?>" placeholder="Например, Condition" style="width: 100%;" />
+                            </td>
+                            <td style="padding: 8px;">
+                                <textarea name="avito_product_custom_fields[<?php echo esc_attr($index); ?>][value]" rows="2" style="width: 100%;" placeholder="Значение или плейсхолдеры"><?php echo esc_textarea($value); ?></textarea>
+                            </td>
+                            <td style="text-align: center; padding: 8px; vertical-align: middle;">
+                                <button type="button" class="button avito-remove-product-field" title="Удалить поле" style="color: #b32d2e; font-weight: bold;">×</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr class="avito-no-product-fields">
+                        <td colspan="3" style="text-align: center; color: #777; padding: 20px;">Пока нет пользовательских полей</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+        <p>
+            <button type="button" class="button" id="avito-add-product-field">Добавить поле</button>
+        </p>
+        <p class="description" style="font-size: 11px;">
+            Поддерживаемые плейсхолдеры: <code>{product_name}</code>, <code>{product_sku}</code>, <code>{product_price}</code>, <code>{product_attributes_list}</code>, <code>{meta:field_name}</code> и др.
+        </p>
+    </div>
+
+    <script type="text/html" id="tmpl-avito-product-custom-field-row">
+        <tr>
+            <td style="padding: 8px;">
+                <input type="text" name="avito_product_custom_fields[{{data.index}}][xml_tag]" value="" placeholder="Например, Condition" style="width: 100%;" />
+            </td>
+            <td style="padding: 8px;">
+                <textarea name="avito_product_custom_fields[{{data.index}}][value]" rows="2" style="width: 100%;" placeholder="Значение или плейсхолдеры"></textarea>
+            </td>
+            <td style="text-align: center; padding: 8px; vertical-align: middle;">
+                <button type="button" class="button avito-remove-product-field" title="Удалить поле" style="color: #b32d2e; font-weight: bold;">×</button>
+            </td>
+        </tr>
+    </script>
+
+    <script>
+    jQuery(document).ready(function($) {
+        var $tableBody = $('.avito-product-custom-fields tbody');
+        var template = wp.template('avito-product-custom-field-row');
+
+        $('#avito-add-product-field').on('click', function() {
+            var index = $tableBody.find('tr').length;
+            if ($tableBody.find('.avito-no-product-fields').length) {
+                $tableBody.find('.avito-no-product-fields').remove();
+            }
+            $tableBody.append(template({ index: index }));
+        });
+
+        $tableBody.on('click', '.avito-remove-product-field', function() {
+            $(this).closest('tr').remove();
+            if (!$tableBody.find('tr').length) {
+                $tableBody.append('<tr class="avito-no-product-fields"><td colspan="3" style="text-align: center; color: #777; padding: 20px;">Пока нет пользовательских полей</td></tr>');
+            }
+        });
+    });
+    </script>
+
+    <style>
+    .avito-product-custom-fields {
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+    .avito-product-custom-fields thead th {
+        background: #f9f9f9;
+        font-weight: 600;
+        padding: 10px 8px;
+        border-bottom: 2px solid #ddd;
+        text-align: left;
+    }
+    .avito-product-custom-fields tbody td {
+        border-bottom: 1px solid #ddd;
+    }
+    .avito-product-custom-fields input[type="text"],
+    .avito-product-custom-fields textarea {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .avito-product-custom-fields textarea {
+        resize: vertical;
+        min-height: 40px;
+    }
+    </style>
+    <?php
     echo '</div>';
 }
 
@@ -147,4 +261,32 @@ function wc_avito_save_dynamic_product_fields($post_id) {
             update_post_meta($post_id, $field_id, $value);
         }
     }
+    
+    // Сохраняем пользовательские поля товара
+    if (isset($_POST['avito_product_custom_fields']) && is_array($_POST['avito_product_custom_fields'])) {
+        $prepared_fields = array();
+
+        foreach ($_POST['avito_product_custom_fields'] as $field) {
+            $xml_tag = isset($field['xml_tag']) ? sanitize_text_field($field['xml_tag']) : '';
+            $value = isset($field['value']) ? wp_kses_post($field['value']) : '';
+
+            if (empty($xml_tag) && empty($value)) {
+                continue;
+            }
+
+            $prepared_fields[] = array(
+                'xml_tag' => $xml_tag,
+                'value' => $value,
+            );
+        }
+
+        if (!empty($prepared_fields)) {
+            update_post_meta($post_id, 'avito_product_custom_fields', $prepared_fields);
+        } else {
+            delete_post_meta($post_id, 'avito_product_custom_fields');
+        }
+    } else {
+        delete_post_meta($post_id, 'avito_product_custom_fields');
+    }
 }
+
